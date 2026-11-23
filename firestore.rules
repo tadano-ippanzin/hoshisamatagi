@@ -1,0 +1,382 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function hasValidTimestampsOnCreate(data) {
+      return data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function hasValidTimestampsOnUpdate(data) {
+      return data.createdAt == existing().createdAt &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidTheme(theme) {
+      return theme in ['CELESTIAL_ASTROLABE', 'PARCHMENT_MAP', 'GEOMETRIC_MINIMAL', 'RETRO_PIXEL'];
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidWorld(data, userId) {
+      return data.userId == userId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.starType, 1, 40) &&
+             isValidString(data.description, 0, 500) &&
+             data.currentYear is int && data.currentYear >= 0 && data.currentYear <= 100000000 &&
+             isValidString(data.eraName, 1, 60) &&
+             data.gridWidth is int && data.gridWidth >= 4 && data.gridWidth <= 24 &&
+             data.gridHeight is int && data.gridHeight >= 4 && data.gridHeight <= 24 &&
+             data.terrainTiles is list && data.terrainTiles.size() <= 256 &&
+             (data.terrainTiles.size() == 0 || data.terrainTiles[0] is int) &&
+             data.nationGrid is list && data.nationGrid.size() <= 256 &&
+             (data.nationGrid.size() == 0 || data.nationGrid[0] is string) &&
+             isValidTheme(data.visualTheme);
+    }
+
+    function isValidElement(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.symbol, 1, 8) &&
+             data.atomicNumber is int && data.atomicNumber >= 1 && data.atomicNumber <= 999 &&
+             isValidString(data.category, 1, 30) &&
+             data.volatility is int && data.volatility >= 0 && data.volatility <= 100 &&
+             data.abundance is int && data.abundance >= 0 && data.abundance <= 100 &&
+             data.colorHex is int &&
+             isValidString(data.traits, 0, 300) &&
+             isValidString(data.compoundFormula, 0, 80);
+    }
+
+    function isValidEcosystem(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.biomeType, 1, 40) &&
+             isValidString(data.climate, 1, 40) &&
+             data.stability is int && data.stability >= 0 && data.stability <= 100 &&
+             isValidString(data.foodWebSummary, 0, 400) &&
+             isValidString(data.keyResource, 0, 60);
+    }
+
+    function isValidSpecies(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.ecosystemId, 0, 128) &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.trophicRole, 1, 30) &&
+             data.population is int && data.population >= 0 && data.population <= 100000000 &&
+             isValidString(data.traits, 0, 300) &&
+             isValidString(data.appearance, 0, 300);
+    }
+
+    function isValidLanguage(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.wordOrder, 1, 20) &&
+             isValidString(data.vowels, 1, 60) &&
+             isValidString(data.consonants, 1, 80) &&
+             isValidString(data.syllablePattern, 1, 20) &&
+             isValidString(data.scriptName, 1, 60) &&
+             isValidString(data.scriptType, 1, 30) &&
+             isValidString(data.writingDirection, 1, 20) &&
+             data.lexiconEntries is list && data.lexiconEntries.size() <= 80 &&
+             (data.lexiconEntries.size() == 0 || data.lexiconEntries[0] is string) &&
+             data.glyphStrokes is list && data.glyphStrokes.size() <= 48 &&
+             (data.glyphStrokes.size() == 0 || data.glyphStrokes[0] is string) &&
+             isValidString(data.sampleSentence, 0, 200);
+    }
+
+    function isValidCulture(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.languageId, 0, 128) &&
+             isValidString(data.ethos, 0, 200) &&
+             isValidString(data.architectureStyle, 0, 120) &&
+             isValidString(data.cuisine, 0, 120) &&
+             isValidString(data.festival, 0, 120) &&
+             isValidString(data.greeting, 0, 120);
+    }
+
+    function isValidReligion(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.cosmologyType, 1, 40) &&
+             isValidString(data.deityConcept, 0, 200) &&
+             isValidString(data.tenets, 0, 400) &&
+             isValidString(data.rituals, 0, 300) &&
+             isValidString(data.creationMyth, 0, 600) &&
+             data.emblemSides is int && data.emblemSides >= 3 && data.emblemSides <= 12 &&
+             data.emblemColorHex is int;
+    }
+
+    function isValidNation(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.name, 1, 60) &&
+             isValidString(data.governmentType, 1, 40) &&
+             isValidString(data.cultureId, 0, 128) &&
+             isValidString(data.religionId, 0, 128) &&
+             isValidString(data.languageId, 0, 128) &&
+             data.colorHex is int &&
+             isValidString(data.motto, 0, 140) &&
+             isValidString(data.diplomacyNote, 0, 300);
+    }
+
+    function isValidVillage(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.nationId, 0, 128) &&
+             isValidString(data.name, 1, 60) &&
+             data.mapX is int && data.mapX >= 0 && data.mapX < 24 &&
+             data.mapY is int && data.mapY >= 0 && data.mapY < 24 &&
+             data.population is int && data.population >= 0 && data.population <= 10000000 &&
+             data.prosperity is int && data.prosperity >= 0 && data.prosperity <= 100 &&
+             isValidString(data.specialty, 0, 80) &&
+             data.districtCells is list && data.districtCells.size() <= 48 &&
+             (data.districtCells.size() == 0 || data.districtCells[0] is string);
+    }
+
+    function isValidPerson(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             isValidString(data.villageId, 0, 128) &&
+             isValidString(data.nationId, 0, 128) &&
+             isValidString(data.name, 1, 60) &&
+             data.age is int && data.age >= 0 && data.age <= 10000 &&
+             isValidString(data.role, 1, 50) &&
+             isValidString(data.districtType, 1, 40) &&
+             isValidString(data.traits, 0, 200) &&
+             isValidString(data.faith, 0, 80) &&
+             isValidString(data.biography, 0, 500);
+    }
+
+    function isValidChronicle(data, userId, worldId) {
+      return data.userId == userId &&
+             data.worldId == worldId &&
+             data.year is int && data.year >= 0 && data.year <= 100000000 &&
+             isValidString(data.category, 1, 40) &&
+             isValidString(data.title, 1, 80) &&
+             isValidString(data.summary, 0, 500);
+    }
+
+    match /users/{userId}/worlds/{worldId} {
+      allow get: if isOwner(userId) && isValidId(worldId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(worldId) &&
+                       incoming().keys().hasAll(['userId', 'name', 'starType', 'description', 'currentYear', 'eraName', 'gridWidth', 'gridHeight', 'terrainTiles', 'nationGrid', 'visualTheme', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'name', 'starType', 'description', 'currentYear', 'eraName', 'gridWidth', 'gridHeight', 'terrainTiles', 'nationGrid', 'visualTheme', 'createdAt', 'updatedAt']) &&
+                       hasValidTimestampsOnCreate(incoming()) &&
+                       isValidWorld(incoming(), userId);
+      allow update: if isOwner(userId) &&
+                       isValidId(worldId) &&
+                       incoming().userId == existing().userId &&
+                       hasValidTimestampsOnUpdate(incoming()) &&
+                       isValidWorld(incoming(), userId) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'starType', 'description', 'currentYear', 'eraName', 'terrainTiles', 'nationGrid', 'visualTheme', 'updatedAt']);
+      allow delete: if isOwner(userId) && isValidId(worldId);
+
+      match /elements/{elementId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(elementId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(elementId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'name', 'symbol', 'atomicNumber', 'category', 'volatility', 'abundance', 'colorHex', 'traits', 'compoundFormula', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'name', 'symbol', 'atomicNumber', 'category', 'volatility', 'abundance', 'colorHex', 'traits', 'compoundFormula', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidElement(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(elementId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidElement(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'symbol', 'atomicNumber', 'category', 'volatility', 'abundance', 'colorHex', 'traits', 'compoundFormula', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(elementId);
+      }
+
+      match /ecosystems/{ecosystemId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(ecosystemId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(ecosystemId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'name', 'biomeType', 'climate', 'stability', 'foodWebSummary', 'keyResource', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'name', 'biomeType', 'climate', 'stability', 'foodWebSummary', 'keyResource', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidEcosystem(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(ecosystemId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidEcosystem(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'biomeType', 'climate', 'stability', 'foodWebSummary', 'keyResource', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(ecosystemId);
+      }
+
+      match /species/{speciesId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(speciesId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(speciesId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'ecosystemId', 'name', 'trophicRole', 'population', 'traits', 'appearance', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'ecosystemId', 'name', 'trophicRole', 'population', 'traits', 'appearance', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidSpecies(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(speciesId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidSpecies(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['ecosystemId', 'name', 'trophicRole', 'population', 'traits', 'appearance', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(speciesId);
+      }
+
+      match /languages/{languageId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(languageId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(languageId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'name', 'wordOrder', 'vowels', 'consonants', 'syllablePattern', 'scriptName', 'scriptType', 'writingDirection', 'lexiconEntries', 'glyphStrokes', 'sampleSentence', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'name', 'wordOrder', 'vowels', 'consonants', 'syllablePattern', 'scriptName', 'scriptType', 'writingDirection', 'lexiconEntries', 'glyphStrokes', 'sampleSentence', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidLanguage(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(languageId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidLanguage(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'wordOrder', 'vowels', 'consonants', 'syllablePattern', 'scriptName', 'scriptType', 'writingDirection', 'lexiconEntries', 'glyphStrokes', 'sampleSentence', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(languageId);
+      }
+
+      match /cultures/{cultureId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(cultureId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(cultureId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'name', 'languageId', 'ethos', 'architectureStyle', 'cuisine', 'festival', 'greeting', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'name', 'languageId', 'ethos', 'architectureStyle', 'cuisine', 'festival', 'greeting', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidCulture(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(cultureId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidCulture(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'languageId', 'ethos', 'architectureStyle', 'cuisine', 'festival', 'greeting', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(cultureId);
+      }
+
+      match /religions/{religionId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(religionId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(religionId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'name', 'cosmologyType', 'deityConcept', 'tenets', 'rituals', 'creationMyth', 'emblemSides', 'emblemColorHex', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'name', 'cosmologyType', 'deityConcept', 'tenets', 'rituals', 'creationMyth', 'emblemSides', 'emblemColorHex', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidReligion(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(religionId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidReligion(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'cosmologyType', 'deityConcept', 'tenets', 'rituals', 'creationMyth', 'emblemSides', 'emblemColorHex', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(religionId);
+      }
+
+      match /nations/{nationId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(nationId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(nationId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'name', 'governmentType', 'cultureId', 'religionId', 'languageId', 'colorHex', 'motto', 'diplomacyNote', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'name', 'governmentType', 'cultureId', 'religionId', 'languageId', 'colorHex', 'motto', 'diplomacyNote', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidNation(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(nationId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidNation(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'governmentType', 'cultureId', 'religionId', 'languageId', 'colorHex', 'motto', 'diplomacyNote', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(nationId);
+      }
+
+      match /villages/{villageId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(villageId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(villageId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'nationId', 'name', 'mapX', 'mapY', 'population', 'prosperity', 'specialty', 'districtCells', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'nationId', 'name', 'mapX', 'mapY', 'population', 'prosperity', 'specialty', 'districtCells', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidVillage(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(villageId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidVillage(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['nationId', 'name', 'mapX', 'mapY', 'population', 'prosperity', 'specialty', 'districtCells', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(villageId);
+      }
+
+      match /people/{personId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(personId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(personId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'villageId', 'nationId', 'name', 'age', 'role', 'districtType', 'traits', 'faith', 'biography', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'villageId', 'nationId', 'name', 'age', 'role', 'districtType', 'traits', 'faith', 'biography', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidPerson(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(personId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidPerson(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['villageId', 'nationId', 'name', 'age', 'role', 'districtType', 'traits', 'faith', 'biography', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(personId);
+      }
+
+      match /chronicles/{chronicleId} {
+        allow get: if isOwner(userId) && isValidId(worldId) && isValidId(chronicleId);
+        allow list: if isOwner(userId) && isValidId(worldId);
+        allow create: if isOwner(userId) && isValidId(worldId) && isValidId(chronicleId) &&
+                         incoming().keys().hasAll(['userId', 'worldId', 'year', 'category', 'title', 'summary', 'createdAt', 'updatedAt']) &&
+                         incoming().keys().hasOnly(['userId', 'worldId', 'year', 'category', 'title', 'summary', 'createdAt', 'updatedAt']) &&
+                         hasValidTimestampsOnCreate(incoming()) &&
+                         isValidChronicle(incoming(), userId, worldId);
+        allow update: if isOwner(userId) && isValidId(worldId) && isValidId(chronicleId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().worldId == existing().worldId &&
+                         hasValidTimestampsOnUpdate(incoming()) &&
+                         isValidChronicle(incoming(), userId, worldId) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['year', 'category', 'title', 'summary', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(worldId) && isValidId(chronicleId);
+      }
+    }
+  }
+}

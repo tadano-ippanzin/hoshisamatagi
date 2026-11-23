@@ -1,0 +1,270 @@
+{
+  "entities": {
+    "World": {
+      "title": "World",
+      "description": "A user-created planet and sandbox world containing terrain and territory grids.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner Firebase Auth UID." },
+        "name": { "type": "string", "description": "Name of the star/planet." },
+        "starType": { "type": "string", "description": "Stellar classification or cosmic setting." },
+        "description": { "type": "string", "description": "Short lore summary of the planet." },
+        "currentYear": { "type": "integer", "description": "Current sandbox timeline year." },
+        "eraName": { "type": "string", "description": "Current historical era label." },
+        "gridWidth": { "type": "integer", "description": "Planet map grid width." },
+        "gridHeight": { "type": "integer", "description": "Planet map grid height." },
+        "terrainTiles": { "type": "array", "description": "Encoded biome and elevation values per tile." },
+        "nationGrid": { "type": "array", "description": "Nation ID owning each tile, or empty string." },
+        "visualTheme": {
+          "type": "string",
+          "enum": ["CELESTIAL_ASTROLABE", "PARCHMENT_MAP", "GEOMETRIC_MINIMAL", "RETRO_PIXEL"]
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp on creation." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp on update." }
+      },
+      "required": ["userId", "name", "starType", "description", "currentYear", "eraName", "gridWidth", "gridHeight", "terrainTiles", "nationGrid", "visualTheme", "createdAt", "updatedAt"]
+    },
+    "WorldElement": {
+      "title": "WorldElement",
+      "description": "Custom primordial element, mineral, or synthesized compound.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "name": { "type": "string" },
+        "symbol": { "type": "string" },
+        "atomicNumber": { "type": "integer" },
+        "category": { "type": "string" },
+        "volatility": { "type": "integer" },
+        "abundance": { "type": "integer" },
+        "colorHex": { "type": "integer" },
+        "traits": { "type": "string" },
+        "compoundFormula": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "name", "symbol", "atomicNumber", "category", "volatility", "abundance", "colorHex", "traits", "compoundFormula", "createdAt", "updatedAt"]
+    },
+    "Ecosystem": {
+      "title": "Ecosystem",
+      "description": "Planetary biome ecosystem linking climate, terrain, and food web dynamics.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "name": { "type": "string" },
+        "biomeType": { "type": "string" },
+        "climate": { "type": "string" },
+        "stability": { "type": "integer" },
+        "foodWebSummary": { "type": "string" },
+        "keyResource": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "name", "biomeType", "climate", "stability", "foodWebSummary", "keyResource", "createdAt", "updatedAt"]
+    },
+    "Species": {
+      "title": "Species",
+      "description": "Flora or fauna living within an ecosystem.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "ecosystemId": { "type": "string" },
+        "name": { "type": "string" },
+        "trophicRole": { "type": "string" },
+        "population": { "type": "integer" },
+        "traits": { "type": "string" },
+        "appearance": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "ecosystemId", "name", "trophicRole", "population", "traits", "appearance", "createdAt", "updatedAt"]
+    },
+    "Language": {
+      "title": "Language",
+      "description": "Constructed language with phonology, grammar, lexicon, and custom script glyphs.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "name": { "type": "string" },
+        "wordOrder": { "type": "string" },
+        "vowels": { "type": "string" },
+        "consonants": { "type": "string" },
+        "syllablePattern": { "type": "string" },
+        "scriptName": { "type": "string" },
+        "scriptType": { "type": "string" },
+        "writingDirection": { "type": "string" },
+        "lexiconEntries": { "type": "array", "description": "Encoded word pairs 'word=meaning'." },
+        "glyphStrokes": { "type": "array", "description": "Encoded stroke paths 'char|polylines'." },
+        "sampleSentence": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "name", "wordOrder", "vowels", "consonants", "syllablePattern", "scriptName", "scriptType", "writingDirection", "lexiconEntries", "glyphStrokes", "sampleSentence", "createdAt", "updatedAt"]
+    },
+    "Culture": {
+      "title": "Culture",
+      "description": "Civilizational culture with ethos, architecture, cuisine, festivals, and language link.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "name": { "type": "string" },
+        "languageId": { "type": "string" },
+        "ethos": { "type": "string" },
+        "architectureStyle": { "type": "string" },
+        "cuisine": { "type": "string" },
+        "festival": { "type": "string" },
+        "greeting": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "name", "languageId", "ethos", "architectureStyle", "cuisine", "festival", "greeting", "createdAt", "updatedAt"]
+    },
+    "Religion": {
+      "title": "Religion",
+      "description": "Belief system with cosmology, tenets, rituals, creation myth, and emblem geometry.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "name": { "type": "string" },
+        "cosmologyType": { "type": "string" },
+        "deityConcept": { "type": "string" },
+        "tenets": { "type": "string" },
+        "rituals": { "type": "string" },
+        "creationMyth": { "type": "string" },
+        "emblemSides": { "type": "integer" },
+        "emblemColorHex": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "name", "cosmologyType", "deityConcept", "tenets", "rituals", "creationMyth", "emblemSides", "emblemColorHex", "createdAt", "updatedAt"]
+    },
+    "Nation": {
+      "title": "Nation",
+      "description": "Sovereign state on the planet with government, banner color, and cultural links.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "name": { "type": "string" },
+        "governmentType": { "type": "string" },
+        "cultureId": { "type": "string" },
+        "religionId": { "type": "string" },
+        "languageId": { "type": "string" },
+        "colorHex": { "type": "integer" },
+        "motto": { "type": "string" },
+        "diplomacyNote": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "name", "governmentType", "cultureId", "religionId", "languageId", "colorHex", "motto", "diplomacyNote", "createdAt", "updatedAt"]
+    },
+    "Village": {
+      "title": "Village",
+      "description": "Settlement placed on the planet map containing an editable 6x6 district grid.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "nationId": { "type": "string" },
+        "name": { "type": "string" },
+        "mapX": { "type": "integer" },
+        "mapY": { "type": "integer" },
+        "population": { "type": "integer" },
+        "prosperity": { "type": "integer" },
+        "specialty": { "type": "string" },
+        "districtCells": { "type": "array", "description": "Encoded 6x6 district cells 'x,y:TYPE:level:label'." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "nationId", "name", "mapX", "mapY", "population", "prosperity", "specialty", "districtCells", "createdAt", "updatedAt"]
+    },
+    "Person": {
+      "title": "Person",
+      "description": "Individual citizen inhabiting a village and district.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "villageId": { "type": "string" },
+        "nationId": { "type": "string" },
+        "name": { "type": "string" },
+        "age": { "type": "integer" },
+        "role": { "type": "string" },
+        "districtType": { "type": "string" },
+        "traits": { "type": "string" },
+        "faith": { "type": "string" },
+        "biography": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "villageId", "nationId", "name", "age", "role", "districtType", "traits", "faith", "biography", "createdAt", "updatedAt"]
+    },
+    "Chronicle": {
+      "title": "Chronicle",
+      "description": "Historical timeline event recorded manually or by world simulation.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "worldId": { "type": "string" },
+        "year": { "type": "integer" },
+        "category": { "type": "string" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "worldId", "year", "category", "title", "summary", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/worlds/{worldId}": {
+      "schema": { "$ref": "#/entities/World" },
+      "description": "User-owned planet worlds."
+    },
+    "/users/{userId}/worlds/{worldId}/elements/{elementId}": {
+      "schema": { "$ref": "#/entities/WorldElement" },
+      "description": "Crafted elements and compounds in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/ecosystems/{ecosystemId}": {
+      "schema": { "$ref": "#/entities/Ecosystem" },
+      "description": "Ecosystems in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/species/{speciesId}": {
+      "schema": { "$ref": "#/entities/Species" },
+      "description": "Species in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/languages/{languageId}": {
+      "schema": { "$ref": "#/entities/Language" },
+      "description": "Constructed languages and writing scripts in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/cultures/{cultureId}": {
+      "schema": { "$ref": "#/entities/Culture" },
+      "description": "Cultures in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/religions/{religionId}": {
+      "schema": { "$ref": "#/entities/Religion" },
+      "description": "Religions and belief systems in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/nations/{nationId}": {
+      "schema": { "$ref": "#/entities/Nation" },
+      "description": "Nations in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/villages/{villageId}": {
+      "schema": { "$ref": "#/entities/Village" },
+      "description": "Villages and district grids in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/people/{personId}": {
+      "schema": { "$ref": "#/entities/Person" },
+      "description": "Individual citizens in a world."
+    },
+    "/users/{userId}/worlds/{worldId}/chronicles/{chronicleId}": {
+      "schema": { "$ref": "#/entities/Chronicle" },
+      "description": "Historical timeline events in a world."
+    }
+  }
+}
